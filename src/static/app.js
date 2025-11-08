@@ -22,13 +22,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Crear la lista de participantes
         const participantsList = details.participants.length > 0
-          ? `
-            <div class="participants-section">
-              <h5>Current Participants:</h5>
-              <ul>
-                ${details.participants.map(participant => `<li>${participant}</li>`).join('')}
-              </ul>
-            </div>`
+            ? `
+              <div class="participants-section">
+                <h5>Current Participants:</h5>
+                <ul class="participants-list">
+                  ${details.participants.map(participant => `
+                    <li>
+                      <span class="participant-name">${participant}</span>
+                      <span class="delete-participant" title="Eliminar" data-activity="${name}" data-participant="${participant}">&#128465;</span>
+                    </li>
+                  `).join('')}
+                </ul>
+              </div>`
           : '<p><em>No participants yet</em></p>';
 
         activityCard.innerHTML = `
@@ -40,6 +45,26 @@ document.addEventListener("DOMContentLoaded", () => {
         `;
 
         activitiesList.appendChild(activityCard);
+            // Evento para eliminar participante
+            activityCard.addEventListener("click", async (e) => {
+              if (e.target.classList.contains("delete-participant")) {
+                const activityName = e.target.getAttribute("data-activity");
+                const participantEmail = e.target.getAttribute("data-participant");
+                try {
+                  const response = await fetch(`/activities/${encodeURIComponent(activityName)}/unregister?email=${encodeURIComponent(participantEmail)}`, {
+                    method: "POST"
+                  });
+                  const result = await response.json();
+                  if (response.ok) {
+                    fetchActivities();
+                  } else {
+                    alert(result.detail || "No se pudo eliminar el participante.");
+                  }
+                } catch (error) {
+                  alert("Error al eliminar participante.");
+                }
+              }
+            });
 
         // Add option to select dropdown
         const option = document.createElement("option");
